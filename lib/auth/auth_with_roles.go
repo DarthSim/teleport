@@ -817,6 +817,25 @@ func (a *AuthWithRoles) SetAccessRequestState(ctx context.Context, reqID string,
 	return a.authServer.SetAccessRequestState(updateCtx, reqID, state)
 }
 
+func (a *AuthWithRoles) GetPluginData(ctx context.Context, filter services.PluginDataFilter) ([]services.PluginData, error) {
+	// NOTE: These permissions will need to be modified if PluginData is ever expanded to support
+	// additional resource kinds beyond AccessRequest.
+	if err := a.action(defaults.Namespace, services.KindAccessRequest, services.VerbList); err != nil {
+		return nil, trace.Wrap(err)
+	}
+	if err := a.action(defaults.Namespace, services.KindAccessRequest, services.VerbRead); err != nil {
+		return nil, trace.Wrap(err)
+	}
+	return a.authServer.GetPluginData(ctx, filter)
+}
+
+func (a *AuthWithRoles) UpdatePluginData(ctx context.Context, params services.PluginDataUpdateParams) error {
+	if err := a.action(defaults.Namespace, services.KindAccessRequest, services.VerbUpdate); err != nil {
+		return trace.Wrap(err)
+	}
+	return a.authServer.UpdatePluginData(ctx, params)
+}
+
 // withUpdateBy creates a child context with the AccessRequestUpdateBy
 // value set.  Expected by AuthServer.SetAccessRequestState.
 func withUpdateBy(ctx context.Context, user string) context.Context {
